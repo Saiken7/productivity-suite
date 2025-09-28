@@ -7,4 +7,9 @@ import java.util.List;
 
 public interface StickyNoteRepository extends MongoRepository<StickyNotes, String> {
     List<StickyNotes> findByUserId(String userId);
+
+    // Newest to Oldest
+    List<StickyNotes> findByUserIdOrderByCreatedAtDesc(String userId);
+
+    void deleteByUserId(String userId);
 }
