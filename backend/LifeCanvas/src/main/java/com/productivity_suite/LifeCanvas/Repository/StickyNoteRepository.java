@@ -4,11 +4,16 @@ import com.productivity_suite.LifeCanvas.Entity.StickyNotes;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface StickyNoteRepository extends MongoRepository<StickyNotes, String> {
     List<StickyNotes> findByUserId(String userId);
 
     // Newest to Oldest
     List<StickyNotes> findByUserIdOrderByCreatedAtDesc(String userId);
+
+    Optional<StickyNotes> findById(String noteId);
+
+    void deleteByIdAndUserId(String id, String userId);
 
 }
