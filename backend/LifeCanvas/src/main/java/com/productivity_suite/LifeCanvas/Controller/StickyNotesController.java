@@ -78,5 +78,23 @@ public class StickyNotesController {
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
+    @PatchMapping("/api/service/v2/sticky-note/{noteId}")
+    public ResponseEntity<?> editNote(@CurrentSecurityContext(expression = "authentication?.name")String email,
+                                      @PathVariable String noteId,
+                                      @RequestBody StickyNotesDTO request){
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(()-> new UsernameNotFoundException("Email not Found"));
+
+        String userId = user.getUserId();
+
+        if(userId != null){
+            stickyNotesService.editOneNote(noteId,request);
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+
+
 
 }
