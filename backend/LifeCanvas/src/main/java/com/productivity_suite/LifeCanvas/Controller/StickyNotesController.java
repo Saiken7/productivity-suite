@@ -6,14 +6,12 @@ import com.productivity_suite.LifeCanvas.Repository.UserRepository;
 import com.productivity_suite.LifeCanvas.Requests.StickyNotesDTO;
 import com.productivity_suite.LifeCanvas.Services.StickyNotesService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -41,6 +39,16 @@ public class StickyNotesController {
         return ResponseEntity.ok(notes);
     }
 
+    @GetMapping("/api/service/v2/sticky-note/{noteId}")
+    public ResponseEntity<?> getOneNote(@PathVariable String noteId){
+        if(noteId != null){
+          StickyNotes note = stickyNotesService.getOneNote(noteId);
+            return new ResponseEntity<>(note,HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Something went Wrong", HttpStatus.BAD_REQUEST);
+
+    }
+
     @PostMapping("/api/service/v2/create-note")
     public ResponseEntity<?> createNote(@CurrentSecurityContext(expression = "authentication?.name") String email,
                                         @RequestBody StickyNotesDTO notesDTO){
@@ -55,6 +63,20 @@ public class StickyNotesController {
         return new ResponseEntity<>("Something Went Wrong",HttpStatus.BAD_REQUEST);
     }
 
+    @DeleteMapping("/api/service/v2/sticky-note/{noteId}")
+    public ResponseEntity<?> deleteNote(@CurrentSecurityContext(expression = "authentication?.name")String email,
+                                        @PathVariable String noteId){
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(()-> new UsernameNotFoundException("Email not Found"));
+
+        String userId = user.getUserId();
+
+        if(userId !=null){
+            stickyNotesService.deleteNote(noteId, userId);
+            return new ResponseEntity<>(HttpStatus.ACCEPTED);
+        }
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
 
 
 }
