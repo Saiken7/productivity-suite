@@ -5,8 +5,8 @@ import com.productivity_suite.LifeCanvas.Entity.UserEntity;
 import com.productivity_suite.LifeCanvas.Repository.UserRepository;
 import com.productivity_suite.LifeCanvas.Requests.StickyNotesDTO;
 import com.productivity_suite.LifeCanvas.Services.StickyNotesService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
@@ -51,7 +51,7 @@ public class StickyNotesController {
 
     @PostMapping("/api/service/v2/create-note")
     public ResponseEntity<?> createNote(@CurrentSecurityContext(expression = "authentication?.name") String email,
-                                        @RequestBody StickyNotesDTO notesDTO){
+                                        @RequestBody @Valid StickyNotesDTO notesDTO){
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(()->new UsernameNotFoundException("Email not found"));
 
@@ -81,7 +81,7 @@ public class StickyNotesController {
     @PatchMapping("/api/service/v2/sticky-note/{noteId}")
     public ResponseEntity<?> editNote(@CurrentSecurityContext(expression = "authentication?.name")String email,
                                       @PathVariable String noteId,
-                                      @RequestBody StickyNotesDTO request){
+                                      @Valid @RequestBody StickyNotesDTO request){
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(()-> new UsernameNotFoundException("Email not Found"));
 
