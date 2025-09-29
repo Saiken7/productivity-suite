@@ -41,7 +41,6 @@ public class StickyNotesService {
     public void deleteNote(String noteId, String userId) {
         StickyNotes noteToBeDeleted = stickyNoteRepository.findById(noteId)
                 .orElseThrow(()-> new RuntimeException("Note Not Found"));
-
         stickyNoteRepository.deleteByIdAndUserId(noteId, userId);
     }
 }
