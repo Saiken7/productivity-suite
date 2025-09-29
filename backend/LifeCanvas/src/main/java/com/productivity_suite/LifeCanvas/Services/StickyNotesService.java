@@ -2,10 +2,13 @@ package com.productivity_suite.LifeCanvas.Services;
 
 import com.productivity_suite.LifeCanvas.Entity.StickyNotes;
 import com.productivity_suite.LifeCanvas.Repository.StickyNoteRepository;
+import com.productivity_suite.LifeCanvas.Requests.StickyNotesDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class StickyNotesService {
@@ -18,5 +21,15 @@ public class StickyNotesService {
     }
 
 
+    public void createNewNote(String userId, StickyNotesDTO notesDTO) {
+        StickyNotes newNote =  StickyNotes.builder()
+                .id(UUID.randomUUID().toString())
+                .userId(userId)
+                .title(notesDTO.getTitle())
+                .note(notesDTO.getNote())
+                .createdAt(LocalDateTime.now())
+                .build();
 
+        stickyNoteRepository.save(newNote);
+    }
 }
