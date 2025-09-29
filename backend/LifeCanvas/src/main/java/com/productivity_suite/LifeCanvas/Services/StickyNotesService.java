@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -19,7 +20,6 @@ public class StickyNotesService {
     public List<StickyNotes> getAllStickyNotes(String userId){
         return stickyNoteRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
-
 
     public void createNewNote(String userId, StickyNotesDTO notesDTO) {
         StickyNotes newNote =  StickyNotes.builder()
@@ -42,5 +42,28 @@ public class StickyNotesService {
         StickyNotes noteToBeDeleted = stickyNoteRepository.findById(noteId)
                 .orElseThrow(()-> new RuntimeException("Note Not Found"));
         stickyNoteRepository.deleteByIdAndUserId(noteId, userId);
+    }
+
+    public void editOneNote(String noteId, StickyNotesDTO request) {
+        Optional<StickyNotes> existingNoteOptional = stickyNoteRepository.findById(noteId);
+
+        if(!existingNoteOptional.isPresent()){
+            throw new RuntimeException("Note not Found");
+        }
+
+        StickyNotes existingNote = existingNoteOptional.get();
+
+        if(existingNote.getTitle() != null){
+            existingNote.setTitle(request.getTitle());
+            existingNote.setCreatedAt(LocalDateTime.now());
+        }
+
+        if(existingNote.getNote() != null){
+            existingNote.setNote(request.getNote());
+            existingNote.setCreatedAt(LocalDateTime.now());
+        }
+
+        stickyNoteRepository.save(existingNote);
+
     }
 }
