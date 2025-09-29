@@ -11,5 +11,4 @@ public interface StickyNoteRepository extends MongoRepository<StickyNotes, Strin
     // Newest to Oldest
     List<StickyNotes> findByUserIdOrderByCreatedAtDesc(String userId);
 
-    void deleteByUserId(String userId);
 }
