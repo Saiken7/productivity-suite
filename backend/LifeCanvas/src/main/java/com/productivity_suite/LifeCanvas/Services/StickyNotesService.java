@@ -32,4 +32,16 @@ public class StickyNotesService {
 
         stickyNoteRepository.save(newNote);
     }
+
+    public StickyNotes getOneNote(String noteId) {
+       return stickyNoteRepository.findById(noteId)
+               .orElseThrow(()-> new RuntimeException("Note not Found"));
+    }
+
+    public void deleteNote(String noteId, String userId) {
+        StickyNotes noteToBeDeleted = stickyNoteRepository.findById(noteId)
+                .orElseThrow(()-> new RuntimeException("Note Not Found"));
+
+        stickyNoteRepository.deleteByIdAndUserId(noteId, userId);
+    }
 }
