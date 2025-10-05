@@ -9,18 +9,11 @@ import com.productivity_suite.LifeCanvas.Requests.ExpenseTrackerDTO;
 import com.productivity_suite.LifeCanvas.Services.ExpenseTrackerService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.time.LocalDate;
+import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
@@ -39,7 +32,7 @@ public class ExpenseTrackerController {
 
         String userId = user.getUserId();
 
-        if(userId != null){
+        if(userId != null || userId != ""){
             List<ExpenseTrackerEntity> expenses  = expenseTrackerService.getUserExpense(userId);
             return new ResponseEntity<>(expenses, HttpStatus.OK);
         }
@@ -55,7 +48,7 @@ public class ExpenseTrackerController {
 
         String userId = user.getUserId();
 
-        if(userId != null){
+        if(userId != null || userId != ""){
             List<ExpenseTrackerEntity> expensesRange = expenseTrackerService.getExpenseFromRange(userId, request.getStart(), request.getEnd());
             return new ResponseEntity<>(expensesRange, HttpStatus.OK);
         }
@@ -74,6 +67,22 @@ public class ExpenseTrackerController {
         }
 
         return new ResponseEntity<>("Something went wrong", HttpStatus.BAD_REQUEST);
+    }
+
+    @DeleteMapping("/api/service/v2/delete-expense/{expenseId}")
+    public ResponseEntity<?> deleteExpense(@CurrentSecurityContext (expression = "authentication?.name") String email,
+                                           @PathVariable String expenseId){
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(()-> new UsernameNotFoundException("User not Found"));
+
+        String userId = user.getUserId();
+
+        if(userId != null || userId != ""){
+            expenseTrackerService.deleteExpense(expenseId, userId);
+            return new ResponseEntity<>("Expense Deleted", HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>("Something went Wrong", HttpStatus.BAD_REQUEST);
     }
 
 
