@@ -8,11 +8,9 @@ import com.productivity_suite.LifeCanvas.Requests.ExpenseTrackerDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class ExpenseTrackerService {
@@ -23,8 +21,8 @@ public class ExpenseTrackerService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<ExpenseTrackerEntity> getUserExpenses(String userId){
-        return expenseTrackerRepository.findByUserId(userId);
+    public List<ExpenseTrackerEntity> getUserExpense(String userId){
+        return expenseTrackerRepository.findByUser_UserId(userId);
     }
 
     public void addNewExpense(String email,ExpenseTrackerDTO request){
@@ -33,7 +31,6 @@ public class ExpenseTrackerService {
                 .orElseThrow(()-> new UsernameNotFoundException("User not Found"));
 
         ExpenseTrackerEntity expense = ExpenseTrackerEntity.builder()
-                .id(Long.valueOf(UUID.randomUUID().toString()))
                 .user(user)
                 .amount(request.getAmount())
                 .description(request.getDescription())
@@ -41,6 +38,11 @@ public class ExpenseTrackerService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
+        expenseTrackerRepository.save(expense);
+    }
+
+    public List<ExpenseTrackerEntity> getExpenseFromRange(String userId, LocalDate start, LocalDate end){
+        return expenseTrackerRepository.findByUser_UserIdAndTransactionDateBetween(userId, start, end);
     }
 
 }
