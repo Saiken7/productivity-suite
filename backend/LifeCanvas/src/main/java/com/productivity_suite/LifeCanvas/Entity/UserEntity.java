@@ -18,9 +18,7 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 public class UserEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-    @Column(unique = true)
+    @Column(name = "user_id", unique = true, nullable = false)
     private String userId;
     private String name;
     @Column(unique = true)
