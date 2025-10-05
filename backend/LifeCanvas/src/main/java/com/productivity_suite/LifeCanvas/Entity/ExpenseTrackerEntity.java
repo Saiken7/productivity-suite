@@ -30,7 +30,9 @@ public class ExpenseTrackerEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Needed Edit here
+    @Column(name = "expense_id", unique = true)
+    private String expenseId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_expense_user"))
     @JsonIgnore
