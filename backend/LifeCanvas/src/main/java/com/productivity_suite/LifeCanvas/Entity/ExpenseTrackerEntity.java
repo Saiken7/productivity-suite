@@ -26,21 +26,23 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class ExpenseTrackerEntity {
 
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    // Needed Edit here
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_expense_user"))
     @JsonIgnore
     @NotNull(message = "User is Required")
     private UserEntity user;
 
     @Column(name = "amount", nullable = false, precision = 10, scale = 2)
-    @NotBlank(message = "Amount should never be blank!!")
-    @Positive(message = "Amount should always be positive")
+    @NotNull(message = "Amount is required")
+    @Positive(message = "Amount should be positive")
     private BigDecimal amount;
 
-    @Size(min = 1, max = 30, message = "Description cannot exceed 30 charecters")
+    @Size(min = 1, max = 30, message = "Description cannot exceed 30 characters")
     @NotBlank(message = "There should be Description for an Expense!")
     private String description;
 
@@ -52,3 +54,4 @@ public class ExpenseTrackerEntity {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 }
+
