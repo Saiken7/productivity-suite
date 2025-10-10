@@ -87,19 +87,4 @@ public class ProductiveSessionService {
                 .build();
     }
 
-    private ProductiveSession convertToProdutiveSession(ProductiveSessionResponse sessionResponse){
-        LocalDate date = LocalDate.now();
-        int weekNumber = date.get(WeekFields.ISO.weekOfWeekBasedYear());
-
-        return ProductiveSession.builder()
-                .sessionId(sessionResponse.getSessionId())
-                .user(sessionResponse.getUser())
-                .startTime(sessionResponse.getStartTime())
-                .endTime(sessionResponse.getEndTime())
-                .durationTime(sessionResponse.getDurationTime())
-                .sessionDate(LocalDate.now())
-                .weekNumber(weekNumber)
-                .year(LocalDate.now().getYear())
-                .build();
-    }
 }
