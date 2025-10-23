@@ -1,6 +1,5 @@
 package com.productivity_suite.LifeCanvas.Controller;
 
-import com.productivity_suite.LifeCanvas.Entity.GoalsEntity;
 import com.productivity_suite.LifeCanvas.Entity.UserEntity;
 import com.productivity_suite.LifeCanvas.Repository.UserRepository;
 import com.productivity_suite.LifeCanvas.Requests.GoalRequest;
@@ -11,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
-import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,6 +38,15 @@ public class GoalController {
         return new ResponseEntity<>("Something went Wrong", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @GetMapping("api/services/v2/goals/{id}")
+    public ResponseEntity<?> getGoalById(@PathVariable String id){
+        if(id == null){
+            return new ResponseEntity<>("Something went Wrong", HttpStatus.BAD_REQUEST);
+        }
+        GoalsResponse response = goalService.getGoal(id);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @PostMapping("/api/services/v2/create-goals")
     public ResponseEntity<?> createGoals(@RequestBody @Valid GoalRequest request,
                                          @CurrentSecurityContext(expression = "authentication?.name")String email){
@@ -55,13 +62,31 @@ public class GoalController {
     }
 
     @PatchMapping("/api/services/v2/update-goal/{id}")
-    public ResponseEntity<?> updateGoal(@PathVariable String id){
+    public ResponseEntity<?> updateGoal(@PathVariable String id,
+                                        @RequestBody GoalRequest request){
+        if(id==null){
+            return new ResponseEntity<>("Something went wrong", HttpStatus.BAD_REQUEST);
+        }
+        GoalsResponse response = goalService.updateGoal(id, request.getGoalTitle(), request.getStartTime(), request.getEndTime());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
+    }
+
+    @PatchMapping("/api/services/v2/update-goal/mark-complete/{id}")
+    public ResponseEntity<?> markComplete(@PathVariable String id){
         if(id == null){
             return new ResponseEntity<>("Something Went Wrong", HttpStatus.BAD_REQUEST);
         }
-        GoalsResponse response = goalService.updateGoal(id);
+        GoalsResponse response = goalService.markComplete(id);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-
+    @DeleteMapping("/api/services/v2/delete-goal/{id}")
+    public ResponseEntity<?> deleteGoal(@PathVariable String id){
+        if(id == null){
+            return new ResponseEntity<>("Something went Wrong", HttpStatus.BAD_REQUEST);
+        }
+        goalService.deleteUserGoal(id);
+        return new ResponseEntity<>("Goal Deleted", HttpStatus.OK);
+    }
 }
