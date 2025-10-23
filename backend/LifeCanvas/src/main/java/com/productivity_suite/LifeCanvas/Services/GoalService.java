@@ -4,6 +4,7 @@ import com.productivity_suite.LifeCanvas.Entity.GoalsEntity;
 import com.productivity_suite.LifeCanvas.Repository.GoalsRepository;
 import com.productivity_suite.LifeCanvas.Responses.GoalsResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -25,6 +26,17 @@ public class GoalService {
                 .toList();
     }
 
+    //GET selected goal of a user
+    public GoalsResponse getGoal(String id){
+        Optional<GoalsEntity> optional = goalsRepository.findById(id);
+        if(optional.isEmpty()){
+            throw new RuntimeException("Goal Not Found");
+        }
+        GoalsEntity goal = optional.get();
+        return convertToGoalResponse(goal);
+    }
+
+
     // Create a Goal
     public GoalsResponse createNewGoal(String goalTitle, LocalDate startDate, LocalDate endTime, String userId){
         GoalsEntity goal = GoalsEntity.builder()
@@ -41,7 +53,7 @@ public class GoalService {
     }
 
     //Goal Completed
-    public GoalsResponse updateGoal(String id){
+    public GoalsResponse markComplete(String id){
         Optional<GoalsEntity> goal = goalsRepository.findById(id);
 
         if(goal.isEmpty()){
@@ -52,6 +64,29 @@ public class GoalService {
         goalsRepository.save(goals);
 
         return convertToGoalResponse(goals);
+    }
+
+    // Edit Goal
+    public GoalsResponse updateGoal(String id, String goalTitle, LocalDate startDate, LocalDate endDate){
+        Optional<GoalsEntity> goal = goalsRepository.findById(id);
+        if(goal.isEmpty()){
+            throw new RuntimeException("Goal not Found - "+ id);
+        }
+        GoalsEntity goals = goal.get();
+        goals.setGoalTitle(goalTitle);
+        goals.setGoalStartTime(startDate);
+        goals.setGoalEndTime(endDate);
+
+        goalsRepository.save(goals);
+        return convertToGoalResponse(goals);
+    }
+
+    public void deleteUserGoal(String id){
+        Optional<GoalsEntity> goal = goalsRepository.findById(id);
+        if(goal.isEmpty()){
+            throw new RuntimeException("Goal Does not Exist ");
+        }
+        goalsRepository.deleteById(id);
     }
 
 
