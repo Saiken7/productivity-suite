@@ -12,4 +12,5 @@ public interface GoalsRepository extends MongoRepository<GoalsEntity, String> {
     List<GoalsEntity> findByUserId(String userId);
     boolean existsById(String id);
     Optional<GoalsEntity>findById(String id);
+    void deleteById(String id);
 }
