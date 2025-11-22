@@ -1,12 +1,15 @@
 package com.productivity_suite.LifeCanvas.Services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.productivity_suite.LifeCanvas.Entity.ProductiveSession;
 import com.productivity_suite.LifeCanvas.Entity.UserEntity;
 import com.productivity_suite.LifeCanvas.Repository.ProductiveSessionRepository;
 import com.productivity_suite.LifeCanvas.Responses.ProductiveSessionResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -20,12 +23,30 @@ public class ProductiveSessionService {
     @Autowired
     private ProductiveSessionRepository productiveSessionRepository;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private ObjectMapper mapper;
+
+
     // Implementation
     public ProductiveSessionResponse getSessionFromId(String sessionId){
-        ProductiveSession session = productiveSessionRepository.findBySessionId(sessionId)
-                .orElseThrow(()-> new RuntimeException("Session Not Found"));
+        String key = "Session:"+sessionId;
 
+        Object cached = redisTemplate.opsForValue().get(key);
+
+        if(cached != null){
+            ProductiveSession result = mapper.convertValue(cached, ProductiveSession.class);
+            return convertToProductiveSessionResponse(result);
+        }
+
+        ProductiveSession session = productiveSessionRepository.findBySessionId(sessionId)
+                .orElseThrow(()-> new RuntimeException("Session not Found"));
+
+        redisTemplate.opsForValue().set(key, convertToProductiveSessionResponse(session), Duration.ofSeconds(600L));
         return convertToProductiveSessionResponse(session);
+
     }
 
     public ProductiveSessionResponse createNewSession(UserEntity user) {
