@@ -1,13 +1,18 @@
 package com.productivity_suite.LifeCanvas.Services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.productivity_suite.LifeCanvas.Entity.KanbanTodoListEntity;
 import com.productivity_suite.LifeCanvas.Entity.UserEntity;
 import com.productivity_suite.LifeCanvas.Repository.KanbanTodoListRepository;
 import com.productivity_suite.LifeCanvas.Repository.UserRepository;
 import com.productivity_suite.LifeCanvas.Responses.KanbanTodoListResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -23,14 +28,32 @@ public class KanbanTodoListService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private ObjectMapper mapper;
+
     // Get All Lists
     public List<KanbanTodoListResponse> getAllLists(String email){
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(()-> new UsernameNotFoundException("User not Found"));
 
         String userId = user.getUserId();
-        List<KanbanTodoListEntity> lists = kanbanTodoListRepository.findByUserId(userId);
 
+        String key = "Kanban:Lists:"+userId;
+
+        Object cached = redisTemplate.opsForValue().get(key);
+
+        if(cached != null){
+            List<KanbanTodoListEntity> list = mapper.convertValue(cached, new TypeReference<List<KanbanTodoListEntity>>() {});
+            return list.stream()
+                    .map(this::convertToResponse)
+                    .toList();
+        }
+
+        List<KanbanTodoListEntity> lists = kanbanTodoListRepository.findByUserId(userId);
+        redisTemplate.opsForValue().set(key,lists, Duration.ofSeconds(600L));
         return lists.stream()
                 .map(this::convertToResponse)
                 .toList();
