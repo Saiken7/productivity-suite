@@ -9,6 +9,7 @@ import java.time.LocalDate;
 @Data
 @Builder
 public class GoalsResponse {
+    private String id;
     private String goalTitle;
     private LocalDate startTime;
     private LocalDate endTime;
