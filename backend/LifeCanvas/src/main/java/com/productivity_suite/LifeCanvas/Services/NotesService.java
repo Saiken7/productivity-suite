@@ -1,13 +1,17 @@
 package com.productivity_suite.LifeCanvas.Services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.productivity_suite.LifeCanvas.Entity.NotesEntity;
 import com.productivity_suite.LifeCanvas.Entity.UserEntity;
 import com.productivity_suite.LifeCanvas.Repository.NotesRepository;
 import com.productivity_suite.LifeCanvas.Repository.UserRepository;
 import com.productivity_suite.LifeCanvas.Responses.NotesResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -23,14 +27,32 @@ public class NotesService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private ObjectMapper mapper;
+
     // Get all Notes of user
     public List<NotesResponse> getAllNotesOfUser(String email){
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(()-> new UsernameNotFoundException("User Not Authenticated"));
 
         String userId = user.getUserId();
+        String key = "Notes:"+userId;
+
+        Object cached = redisTemplate.opsForValue().get(key);
+
+        if(cached != null){
+            List<NotesEntity> note = mapper.convertValue(cached, new TypeReference<List<NotesEntity>>() {});
+            return note.stream()
+                    .map(this::convertToNoteResponse)
+                    .toList();
+        }
 
         List<NotesEntity> response = notesRepository.findByUserId(userId);
+
+        redisTemplate.opsForValue().set(key,response, Duration.ofSeconds(600L));
 
         return response.stream()
                 .map(this::convertToNoteResponse)
@@ -46,7 +68,16 @@ public class NotesService {
         }
 
         NotesEntity note = optional.get();
+        String key = "SingleNote:" + id;
 
+        Object cached = redisTemplate.opsForValue().get(key);
+
+        if(cached != null){
+            NotesEntity response = mapper.convertValue(cached, NotesEntity.class);
+            return convertToNoteResponse(response);
+        }
+
+        redisTemplate.opsForValue().set(key,note, Duration.ofSeconds(600L));
         return convertToNoteResponse(note);
     }
 
