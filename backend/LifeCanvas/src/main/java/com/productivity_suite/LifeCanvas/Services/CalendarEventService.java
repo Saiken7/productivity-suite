@@ -1,13 +1,18 @@
 package com.productivity_suite.LifeCanvas.Services;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.productivity_suite.LifeCanvas.Entity.CalendarEventEntity;
 import com.productivity_suite.LifeCanvas.Entity.UserEntity;
 import com.productivity_suite.LifeCanvas.Repository.CalendarEventsRepository;
 import com.productivity_suite.LifeCanvas.Repository.UserRepository;
 import com.productivity_suite.LifeCanvas.Responses.CalendarEventResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -21,14 +26,31 @@ public class CalendarEventService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
     // Get Calendar Events of User
     public List<CalendarEventResponse> getUserEvents(String email){
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(()-> new UsernameNotFoundException("User not Found"));
 
         String userId = user.getUserId();
-        List<CalendarEventEntity> response = calendarEventsRepository.findByUserId(userId);
+        String key = "Calendar:"+userId;
 
+        Object cached = redisTemplate.opsForValue().get(key);
+
+        if(cached != null){
+            List<CalendarEventEntity> list = objectMapper.convertValue(cached, new TypeReference<List<CalendarEventEntity>>(){});
+            return list.stream()
+                    .map(this::convertToResponse)
+                    .toList();
+        }
+
+        List<CalendarEventEntity> response = calendarEventsRepository.findByUserId(userId);
+        redisTemplate.opsForValue().set(key,response, Duration.ofSeconds(600L));
         return response.stream()
                 .map(this::convertToResponse)
                 .toList();
